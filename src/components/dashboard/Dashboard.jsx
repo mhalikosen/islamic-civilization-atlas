@@ -5,6 +5,8 @@ import SCHOLAR_LINKS from '../../data/scholar_links';
 import { ERA_BANDS } from '../../config/eras';
 import { ZONE_C } from '../../config/colors';
 import '../../styles/dashboard.css';
+import { f, n } from '../../data/i18n-utils';
+import T from '../../data/i18n';
 
 /* ── CountUp animation ── */
 function CountUp({ target, duration = 1800 }) {
@@ -133,31 +135,42 @@ function AreaChart({ data, width = 320, height = 180 }) {
 }
 
 /* ── DASHBOARD MAIN ── */
-export default function Dashboard({ lang, t, onTabChange }) {
+export default function Dashboard({ lang, t: tProp, onTabChange }) {
+  const t = tProp || T[lang];
   const td = t.dashboard || {};
 
   /* Computed data */
   const overviewStats = useMemo(() => [
-    { key: 'dynasties', icon: '🏛', count: DB.dynasties?.length || 0, label: lang === 'tr' ? 'Hanedan' : 'Dynasties', tab: 'map' },
-    { key: 'scholars', icon: '📚', count: DB.scholars?.length || 0, label: lang === 'tr' ? 'Âlim' : 'Scholars', tab: 'scholars' },
-    { key: 'battles', icon: '⚔', count: DB.battles?.length || 0, label: lang === 'tr' ? 'Savaş' : 'Battles', tab: 'battles' },
-    { key: 'rulers', icon: '👑', count: DB.rulers?.length || 0, label: lang === 'tr' ? 'Hükümdar' : 'Rulers', tab: 'map' },
-    { key: 'monuments', icon: '🕌', count: DB.monuments?.length || 0, label: lang === 'tr' ? 'Eser' : 'Monuments', tab: 'map' },
-    { key: 'cities', icon: '🏙', count: DB.cities?.length || 0, label: lang === 'tr' ? 'Şehir' : 'Cities', tab: 'map' },
-    { key: 'routes', icon: '🛤', count: DB.routes?.length || 0, label: lang === 'tr' ? 'Ticaret Yolu' : 'Trade Routes', tab: 'map' },
-    { key: 'madrasas', icon: '🎓', count: DB.madrasas?.length || 0, label: lang === 'tr' ? 'Medrese' : 'Madrasas', tab: 'map' },
+    { key: 'dynasties', icon: '🏛', count: DB.dynasties?.length || 0, label: t.layers.dynasties, tab: 'map' },
+    { key: 'scholars', icon: '📚', count: DB.scholars?.length || 0, label: t.layers.scholars, tab: 'scholars' },
+    { key: 'battles', icon: '⚔', count: DB.battles?.length || 0, label: t.layers.battles, tab: 'battles' },
+    { key: 'rulers', icon: '👑', count: DB.rulers?.length || 0, label: t.layers.rulers, tab: 'map' },
+    { key: 'monuments', icon: '🕌', count: DB.monuments?.length || 0, label: t.layers.monuments, tab: 'map' },
+    { key: 'cities', icon: '🏙', count: DB.cities?.length || 0, label: t.layers.cities, tab: 'map' },
+    { key: 'routes', icon: '🛤', count: DB.routes?.length || 0, label: t.layers.routes, tab: 'map' },
+    { key: 'madrasas', icon: '🎓', count: DB.madrasas?.length || 0, label: t.layers.madrasas, tab: 'map' },
+    { key: 'alam', icon: '📖', count: 13940, label: t.landing.alamBio, tab: 'alam' },
+    { key: 'darpislam', icon: '🪙', count: 3458, label: { tr: 'Darphane', en: 'Mints' }[lang], tab: 'darpislam' },
+    { key: 'khitat', icon: '🏛️', count: 801, label: { tr: 'Yapı (el-Hıṭaṭ)', en: 'Structures (al-Khiṭaṭ)' }[lang], tab: 'khitat' },
+    { key: 'cityatlas', icon: '🏙️', count: 219, label: { tr: 'Yapı (Konya)', en: 'Monuments (Konya)' }[lang], tab: 'cityatlas' },
+    { key: 'lestrange', icon: '🗺️', count: 434, label: { tr: 'Coğrafi Kayıt (Le Strange)', en: 'Geographic Records (Le Strange)' }[lang], tab: 'lestrange' },
+    { key: 'muqaddasi', icon: '📐', count: 2049, label: { tr: 'Yerleşim (Makdisî)', en: 'Places (al-Muqaddasī)' }[lang], tab: 'muqaddasi' },
+    { key: 'rihla', icon: '🧭', count: 317, label: { tr: 'Durak (İbn Battûta)', en: 'Stops (Ibn Battuta)' }[lang], tab: 'rihla' },
+    { key: 'evliya', icon: '🐫', count: 5444, label: { tr: 'Durak (Evliyâ Çelebi)', en: 'Stops (Evliya Çelebi)' }[lang], tab: 'evliya' },
+    { key: 'salibiyyat', icon: '⚔️', count: 790, label: { tr: 'Olay (Salibiyyât)', en: 'Events (Crusades)' }[lang], tab: 'salibiyyat' },
+    { key: 'science', icon: '🔬', count: 186, label: { tr: 'Bilim Atlası', en: 'Science Atlas' }[lang], tab: 'science' },
   ], [lang]);
 
   /* Era distribution */
   const eraData = useMemo(() => {
     const counts = {};
     ERA_BANDS.forEach(([s, e, , names]) => {
-      const name = lang === 'tr' ? names.tr : names.en;
+      const name = n(names, lang);
       counts[name] = 0;
     });
     DB.dynasties.forEach(d => {
       ERA_BANDS.forEach(([s, e, , names]) => {
-        const name = lang === 'tr' ? names.tr : names.en;
+        const name = n(names, lang);
         if (d.start < e && (d.end || 9999) > s) counts[name]++;
       });
     });
@@ -173,7 +186,7 @@ export default function Dashboard({ lang, t, onTabChange }) {
   const regionData = useMemo(() => {
     const counts = {};
     DB.dynasties.forEach(d => {
-      const z = d.zone || (lang === 'tr' ? 'Bilinmeyen' : 'Unknown');
+      const z = d.zone || t.dashboard.unknown;
       counts[z] = (counts[z] || 0) + 1;
     });
     return Object.entries(counts)
@@ -230,7 +243,7 @@ export default function Dashboard({ lang, t, onTabChange }) {
       .slice(0, 10)
       .map(([id, cnt]) => {
         const s = scholarMap[+id];
-        return s ? { name: lang === 'tr' ? s.tr : s.en, count: cnt, disc: s.disc_tr || '', id: s.id } : null;
+        return s ? { name: n(s, lang), count: cnt, disc: s.disc_tr || '', id: s.id } : null;
       })
       .filter(Boolean);
   }, [lang]);
@@ -258,10 +271,10 @@ export default function Dashboard({ lang, t, onTabChange }) {
       .sort((a, b) => a.founded - b.founded)
       .slice(0, 6)
       .map(m => ({
-        name: lang === 'tr' ? m.tr : m.en,
-        city: lang === 'tr' ? m.city_tr : m.city_en,
+        name: n(m, lang),
+        city: f(m, 'city', lang),
         year: m.founded,
-        type: lang === 'tr' ? m.type_tr : m.type_en,
+        type: f(m, 'type', lang),
       }))
   , [lang]);
 
@@ -270,7 +283,7 @@ export default function Dashboard({ lang, t, onTabChange }) {
   }, [onTabChange]);
 
   return (
-    <div className="dashboard">
+    <div className="dashboard" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 64px)', paddingBottom: 40 }}>
       <div className="dash-grid">
 
         {/* CARD 1: Overview */}
@@ -282,6 +295,83 @@ export default function Dashboard({ lang, t, onTabChange }) {
                 <span className="dash-stat-icon">{s.icon}</span>
                 <span className="dash-stat-num"><CountUp target={s.count} /></span>
                 <span className="dash-stat-label">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CARD: Data Sources Comparison */}
+        <div className="dash-card dash-card-wide">
+          <h3 className="dash-card-title">{{ tr: 'Veri Kaynakları', en: 'Data Sources', ar: 'مصادر البيانات' }[lang]}</h3>
+          <div className="dash-sources-grid">
+            {[
+              { icon: '📖', name: 'al-Aʿlām', count: '13,940', scope: '7–20. yy.', tab: 'alam',
+                desc: { tr: 'Ziriklî biyografi', en: 'Ziriklī biographies', ar: 'تراجم الزركلي' }[lang] },
+              { icon: '📚', name: 'DİA', count: '8,528', scope: '7–20. yy.', tab: 'dia',
+                desc: { tr: 'TDV âlim biyografileri', en: 'TDV scholar bios', ar: 'تراجم علماء TDV' }[lang] },
+              { icon: '📕', name: 'EI-1', count: '7,568', scope: '7–19. yy.', tab: 'ei1',
+                desc: { tr: 'Brill 1. baskı', en: 'Brill 1st edition', ar: 'طبعة بريل الأولى' }[lang] },
+              { icon: '🌍', name: "Muʿjam", count: '12,954', scope: '7–13. yy.', tab: 'yaqut',
+                desc: { tr: 'Yâkût coğrafya', en: 'Yāqūt geography', ar: 'جغرافيا ياقوت' }[lang] },
+              { icon: '🪙', name: 'DarpIslam', count: '3,458', scope: 'H. 1–399', tab: 'darpislam', desc: { tr: 'İslam darphaneleri', en: 'Islamic mints' }[lang] },
+              { icon: '🏛️', name: 'el-Hıṭaṭ', count: '801', scope: 'Kâhire', tab: 'khitat', desc: { tr: 'Makrîzî Kâhire topografyası', en: 'Maqrīzī Cairo topography' }[lang] },
+              { icon: '🏙️', name: 'Konya Atlası', count: '219', scope: 'Konya', tab: 'cityatlas', desc: { tr: 'Konyalı mimari envanteri', en: 'Konyalı architectural inventory' }[lang] },
+              { icon: '🗺️', name: 'Le Strange', count: '434', scope: '7–15. yy.', tab: 'lestrange', desc: { tr: 'Doğu Hilâfet coğrafyası', en: 'Eastern Caliphate geography' }[lang] },
+              { icon: '📐', name: 'Makdisî', count: '2,049', scope: '4. yy. H.', tab: 'muqaddasi', desc: { tr: 'Ahsenü\'t-Tekâsîm coğrafyası', en: 'Aḥsan al-Taqāsīm geography' }[lang] },
+              { icon: '🧭', name: 'İbn Battûta', count: '317', scope: '14. yy.', tab: 'rihla', desc: { tr: 'Rihle seyahat durakları', en: 'Rihla travel stops' }[lang] },
+              { icon: '🐫', name: 'Evliyâ Çelebi', count: '5,444', scope: '17. yy.', tab: 'evliya', desc: { tr: 'Seyahatnâme durakları', en: 'Seyahatname travel stops' }[lang] },
+              { icon: '⚔️', name: 'Salibiyyât', count: '790', scope: '1096–1438', tab: 'salibiyyat', desc: { tr: 'Haçlı seferleri olayları', en: 'Crusade events' }[lang] },
+              { icon: '🔬', name: 'Bilim Atlası', count: '186', scope: '8–15. yy.', tab: 'science', desc: { tr: 'İslam bilim tarihi', en: 'Islamic science history' }[lang] },
+            ].map(src => (
+              <div key={src.name} className="dash-source-card" onClick={() => goTab(src.tab)} role="button" tabIndex={0}>
+                <div className="dash-source-header">
+                  <span className="dash-source-icon">{src.icon}</span>
+                  <span className="dash-source-name">{src.name}</span>
+                </div>
+                <div className="dash-source-count">{src.count}</div>
+                <div className="dash-source-desc">{src.desc}</div>
+                <div className="dash-source-scope">{src.scope}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CARD: Changelog */}
+        <div className="dash-card">
+          <h3 className="dash-card-title">{{ tr: 'Son Güncellemeler', en: 'Recent Updates', ar: 'آخر التحديثات' }[lang]}</h3>
+          <div className="dash-changelog">
+            {[
+              { ver: 'v7.8.0.0', items: [
+                { tr: 'Makdisî: 2.049 yerleşim, 1.427 güzergâh, 14 iklim', en: 'al-Muqaddasī: 2,049 places, 1,427 routes, 14 iqlīm' },
+                { tr: 'Zoom-tabanlı marker görünürlük ve iklim filtresi', en: 'Zoom-based marker visibility and iqlīm filter' },
+              ]},
+              { ver: 'v7.7.0.0', items: [
+                { tr: 'Evliyâ Çelebi: Faz 3 frontend tamamlandı', en: 'Evliya Çelebi: Phase 3 frontend complete' },
+                { tr: 'Salibiyyât: 4 alt-sekme, Canvas bee-swarm, D3 ağ', en: 'Crusades: 4 sub-tabs, Canvas bee-swarm, D3 network' },
+              ]},
+              { ver: 'v7.3.0.0', items: [
+                { tr: 'Le Strange: 434 coğrafi kayıt, 34 eyalet', en: 'Le Strange: 434 geographic records, 34 provinces' },
+                { tr: 'Çapraz referans: Yâkūt/EI/DİA bağlantıları', en: 'Cross-references: Yāqūt/EI/DİA links' },
+              ]},
+              { ver: 'v6.5.3.0', items: [
+                { tr: 'Quiz: Zamanlayıcı, seri, kategoriler', en: 'Quiz: Timer, streak, categories' },
+                { tr: 'Lejant yeniden tasarlandı', en: 'Legend redesigned' },
+                { tr: 'Hakkında paneli zenginleştirildi', en: 'About panel enriched' },
+              ]},
+              { ver: 'v6.5.2.1', items: [
+                { tr: 'DİA Ego-ağı ve topluluk tespiti', en: 'DİA ego-network & community detection' },
+                { tr: 'DİA Sankey akış diyagramı', en: 'DİA Sankey flow diagram' },
+              ]},
+              { ver: 'v6.5.2.0', items: [
+                { tr: 'EI-1 Harita ve Ağ görünümü', en: 'EI-1 Map & Network views' },
+                { tr: 'Coğrafi layout modu', en: 'Geographic layout mode' },
+              ]},
+            ].map(cl => (
+              <div key={cl.ver} className="dash-cl-group">
+                <span className="dash-cl-ver">{cl.ver}</span>
+                <ul className="dash-cl-list">
+                  {cl.items.map((it, i) => <li key={i}>{it[lang] || it.en}</li>)}
+                </ul>
               </div>
             ))}
           </div>

@@ -1,33 +1,11 @@
 /* ═══════════════════════════════════════════════════
    İslam Medeniyeti Atlası — Base Theme
+   Colors defined in theme.css (Dark/Light system)
    ═══════════════════════════════════════════════════ */
 
 :root {
-  --bg: #080c18;
-  --bg2: #0f1629;
-  --bg3: #161d33;
-  --gold: #c9a84c;
-  --gold2: #e8c65a;
-  --cream: #e8dcc8;
-  --cream2: #c4b89a;
-  --border: #1e2a44;
   --font-display: 'Amiri', serif;
   --font-body: 'Outfit', sans-serif;
-
-  /* Stacking order */
-  --z-footer: 100;
-  --z-trigger: 500;
-  --z-panel: 800;
-  --z-overlay: 900;
-  --z-backdrop: 950;
-  --z-nav: 1000;
-  --z-hamburger: 1100;
-  --z-modal: 5000;
-  --z-dropdown: 9000;
-  --z-glossary: 9500;
-  --z-toast: 9800;
-  --z-tooltip: 9999;
-  --z-top: 10000;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -76,13 +54,20 @@ body {
   border-color: var(--gold); color: var(--gold);
 }
 
+.lang-switcher {
+  display: flex; gap: 4px; align-items: center;
+}
 .lang-btn {
   background: var(--bg3); border: 1px solid var(--border); color: var(--cream2);
-  padding: 6px 12px; border-radius: 6px; cursor: pointer;
+  padding: 6px 10px; border-radius: 6px; cursor: pointer;
   font-family: var(--font-body); font-size: 12px;
   transition: all .2s;
 }
 .lang-btn:hover { border-color: var(--gold); color: var(--gold); }
+.lang-btn.active {
+  background: linear-gradient(135deg, #c9a84c33, #c9a84c22);
+  border-color: var(--gold); color: var(--gold);
+}
 
 .about-btn {
   background: var(--bg3); border: 1px solid var(--border); color: var(--cream2);
@@ -96,11 +81,11 @@ body {
 
 /* ─── Tooltip ─── */
 .tt {
-  position: fixed; z-index: var(--z-tooltip);
+  position: fixed; z-index: 9999;
   background: var(--bg3); border: 1px solid var(--gold);
-  border-radius: 8px; padding: 8px 12px;
-  font-size: 11px; color: var(--cream); line-height: 1.5;
-  pointer-events: none; max-width: 320px;
+  border-radius: 8px; padding: 12px 16px;
+  font-size: 13px; color: var(--cream); line-height: 1.7;
+  pointer-events: none; max-width: 440px;
   box-shadow: 0 4px 20px rgba(0,0,0,.6);
 }
 .tt b { color: var(--gold); font-family: var(--font-display); }
@@ -111,7 +96,7 @@ body {
   background: var(--gold); color: var(--bg);
   padding: 8px 16px; border-radius: 0 0 6px 6px;
   font-weight: 600; font-size: 13px;
-  z-index: var(--z-top); text-decoration: none;
+  z-index: 10000; text-decoration: none;
   transition: top .2s;
 }
 .skip-link:focus { top: 0; }
@@ -138,15 +123,26 @@ button:focus-visible, .tab:focus-visible, select:focus-visible, input:focus-visi
 /* ─── Trade Route Animation ─── */
 @keyframes tradeFlow { to { stroke-dashoffset: -30; } }
 .trade-anim { animation: tradeFlow 2s linear infinite; }
+/* ═══════════════════════════════════════════════════════════════════
+   Session 29 Patches — append to base.css
+   ═══════════════════════════════════════════════════════════════════ */
 
-/* ─── Respect user motion preferences ─── */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+/* ─── B1: Force-hide .header-right on desktop ────────────────────
+   The mobile hamburger drawer (.header-right) should NEVER appear
+   on desktop (>768px). Desktop uses .header-nav-grouped + .header-utils.
+   This CSS ensures it stays hidden even if JS isMobile check lags. */
+
+@media (min-width: 769px) {
+  .header-right {
+    display: none !important;
   }
+}
+
+/* ─── B4: Legend z-index fix ─────────────────────────────────────
+   Legend was disappearing behind other layers at certain zooms.
+   Ensure it stays above map tiles and overlays. */
+
+.map-legend {
+  z-index: 1000 !important;
+  pointer-events: auto;
 }

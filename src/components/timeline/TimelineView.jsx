@@ -156,10 +156,10 @@ export default function TimelineView({ lang, t }) {
         .on('mouseenter', (ev) => {
           const an = analyticsMap[d.id];
           const narr = lf(d, 'narr', lang) || '';
-          const narrSnip = narr.length > 120 ? narr.slice(0, 120) + '…' : narr;
+          const narrSnip = narr;
           setTooltip({
             x: ev.pageX, y: ev.pageY,
-            html: `<b>${n(d, lang)}</b><br/>${d.start}–${d.end} · ${d.zone}<br/>${d.rel || '—'} · ${d.gov || '—'}${an ? '<br/>Power: ' + an.pi : ''}${narrSnip ? '<br/><span style="color:#c4b89a;font-size:10px">' + narrSnip + '</span>' : ''}`
+            html: `<b>${n(d, lang)}</b><br/>${d.start}–${d.end} · ${d.zone}<br/>${d.rel || '—'} · ${d.gov || '—'}${an ? '<br/>Power: ' + an.pi : ''}${narrSnip ? '<br/><span style="color:#c4b89a;font-size:12.5px">' + narrSnip + '</span>' : ''}`
           });
         })
         .on('mouseleave', () => setTooltip(null));
@@ -203,7 +203,7 @@ export default function TimelineView({ lang, t }) {
         const ty = mt + tgtRow * (barH + gap) + barH / 2;
 
         const col = TL_LINK_COL[link.lt] || '#c9a84c55';
-        const desc = lang === 'tr' ? link.dtr : link.den;
+        const desc = (link[`d${lang}`] || link.den || link.dtr);
 
         const midX = cx + (ty > sy ? 15 : -15);
         const path = `M${cx},${sy} C${midX},${sy} ${midX},${ty} ${cx},${ty}`;
@@ -240,10 +240,10 @@ export default function TimelineView({ lang, t }) {
           .attr('cursor', 'pointer')
           .on('mouseenter', ev => {
             const narr = lf(b, 'narr', lang) || '';
-            const narrSnip = narr.length > 100 ? narr.slice(0, 100) + '…' : narr;
+            const narrSnip = narr;
             setTooltip({
               x: ev.pageX, y: ev.pageY,
-              html: `<b>⚔ ${n(b, lang)}</b><br/>${b.yr} · ${t.imp[b.sig] || b.sig}${b.res ? '<br/>' + b.res : ''}${narrSnip ? '<br/><span style="color:#c4b89a;font-size:10px">' + narrSnip + '</span>' : ''}`
+              html: `<b>⚔ ${n(b, lang)}</b><br/>${b.yr} · ${t.imp[b.sig] || b.sig}${b.res ? '<br/>' + b.res : ''}${narrSnip ? '<br/><span style="color:#c4b89a;font-size:12.5px">' + narrSnip + '</span>' : ''}`
             });
           })
           .on('mouseleave', () => setTooltip(null));
@@ -261,10 +261,10 @@ export default function TimelineView({ lang, t }) {
           .attr('cursor', 'pointer')
           .on('mouseenter', ev => {
             const narr = lf(e, 'narr', lang) || '';
-            const narrSnip = narr.length > 100 ? narr.slice(0, 100) + '…' : narr;
+            const narrSnip = narr;
             setTooltip({
               x: ev.pageX, y: ev.pageY,
-              html: `<b>📜 ${n(e, lang)}</b><br/>${e.yr} · ${t.imp[e.sig] || e.sig}${narrSnip ? '<br/><span style="color:#c4b89a;font-size:10px">' + narrSnip + '</span>' : ''}`
+              html: `<b>📜 ${n(e, lang)}</b><br/>${e.yr} · ${t.imp[e.sig] || e.sig}${narrSnip ? '<br/><span style="color:#c4b89a;font-size:12.5px">' + narrSnip + '</span>' : ''}`
             });
           })
           .on('mouseleave', () => setTooltip(null));
@@ -286,10 +286,10 @@ export default function TimelineView({ lang, t }) {
           .attr('cursor', 'pointer')
           .on('mouseenter', ev => {
             const narr = lf(s, 'narr', lang) || '';
-            const narrSnip = narr.length > 100 ? narr.slice(0, 100) + '…' : narr;
+            const narrSnip = narr;
             setTooltip({
               x: ev.pageX, y: ev.pageY,
-              html: `<b>📚 ${n(s, lang)}</b><br/>${s.b}–${s.d} · ${s.field}<br/>${lf(s, 'work', lang)}${narrSnip ? '<br/><span style="color:#c4b89a;font-size:10px">' + narrSnip + '</span>' : ''}`
+              html: `<b>📚 ${n(s, lang)}</b><br/>${s.b}–${s.d} · ${s.field}<br/>${lf(s, 'work', lang)}${narrSnip ? '<br/><span style="color:#c4b89a;font-size:12.5px">' + narrSnip + '</span>' : ''}`
             });
           })
           .on('mouseleave', () => setTooltip(null));
@@ -321,7 +321,7 @@ export default function TimelineView({ lang, t }) {
             if (r.lst) badges.push('◆ Last');
             setTooltip({
               x: ev.pageX, y: ev.pageY,
-              html: `<b>👑 ${r.n}</b><br/>${r.rs}–${r.re || '?'} · ${r.role || ''}${r.dur ? '<br/>Duration: ' + r.dur + ' yr' : ''}${badges.length ? '<br/>' + badges.join(' · ') : ''}<br/><span style="color:#c4b89a;font-size:10px">${dynNameMap[r.did] || ''}</span>`
+              html: `<b>👑 ${r.n}</b><br/>${r.rs}–${r.re || '?'} · ${r.role || ''}${r.dur ? '<br/>Duration: ' + r.dur + ' yr' : ''}${badges.length ? '<br/>' + badges.join(' · ') : ''}<br/><span style="color:#c4b89a;font-size:12.5px">${dynNameMap[r.did] || ''}</span>`
             });
           })
           .on('mouseleave', () => setTooltip(null));
@@ -342,7 +342,7 @@ export default function TimelineView({ lang, t }) {
           <button className={`tl-btn${showEvents ? ' active' : ''}`} onClick={() => setShowEvents(p => !p)}>📜 {t.tl.events}</button>
           <button className={`tl-btn${showScholars ? ' active' : ''}`} onClick={() => setShowScholars(p => !p)}>📚 {t.tl.scholars}</button>
           <button className={`tl-btn${showRulers ? ' active' : ''}`} onClick={() => setShowRulers(p => !p)}>👑 {t.m.rulers}</button>
-          <button className={`tl-btn${showCausal ? ' active' : ''}`} onClick={() => setShowCausal(p => !p)}>🔗 {lang === 'tr' ? 'Nedensellik' : 'Causality'}</button>
+          <button className={`tl-btn${showCausal ? ' active' : ''}`} onClick={() => setShowCausal(p => !p)}>🔗 {{ tr: 'Nedensellik', en: 'Causality', ar: '' }[lang]}</button>
         </div>
         <div className="tl-grp">
           <button className="tl-btn" onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}>🔍−</button>
@@ -354,7 +354,7 @@ export default function TimelineView({ lang, t }) {
         <svg ref={svgRef} />
       </div>
       {tooltip && (
-        <div className="tt" style={{ left: tooltip.x + 12, top: tooltip.y - 10 }}
+        <div className="tt" style={{ left: tooltip.x + 12, top: tooltip.y - 10, maxWidth: 420 }}
           dangerouslySetInnerHTML={{ __html: tooltip.html }} />
       )}
       {selectedEra && (

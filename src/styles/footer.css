@@ -15,6 +15,24 @@
 .footer-sep { color: var(--cream2); font-size: 11px; }
 .footer-orcid { display: inline-flex; align-items: center; margin-left: 4px; vertical-align: middle; }
 .footer-orcid img { vertical-align: middle; }
+
+/* ═══ ORCID Badge — Prominent v7.2 ═══ */
+.footer-orcid-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: 6px; vertical-align: middle;
+  background: rgba(166, 206, 57, 0.12);
+  border: 1px solid rgba(166, 206, 57, 0.3);
+  padding: 2px 8px 2px 5px; border-radius: 12px;
+  text-decoration: none; transition: all 0.2s;
+  font-size: 10px; color: #a6ce39;
+  line-height: 1;
+}
+.footer-orcid-badge:hover {
+  background: rgba(166, 206, 57, 0.22);
+  border-color: rgba(166, 206, 57, 0.5);
+}
+.footer-orcid-badge img { vertical-align: middle; flex-shrink: 0; }
+.footer-orcid-id { font-family: 'Courier New', monospace; font-size: 9px; letter-spacing: 0.3px; }
 .footer-affil { font-size: 10px; color: var(--cream2); }
 
 .footer-center { display: flex; align-items: center; gap: 12px; }
@@ -124,4 +142,55 @@
 @media (max-width: 768px) {
   .footer-inner { flex-direction: column; align-items: flex-start; gap: 8px; padding: 10px 14px; }
   .footer-center { width: 100%; justify-content: center; }
+}
+/* ═══ Footer toggle additions ═══ */
+
+/* Toggle bar */
+.footer-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 3px 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--cream2);
+  transition: color 0.2s;
+}
+.footer-toggle:hover { color: var(--gold); }
+
+.footer-toggle-line {
+  flex: 1;
+  max-width: 60px;
+  height: 1px;
+  background: var(--border);
+}
+.footer-toggle-icon {
+  font-size: 8px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.footer-toggle:hover .footer-toggle-icon { opacity: 1; }
+
+/* Collapsed state */
+.site-footer.footer-collapsed {
+  padding: 0;
+}
+.site-footer.footer-collapsed .footer-toggle {
+  padding: 4px 0;
+}
+
+/* Smooth expand/collapse */
+.site-footer {
+  transition: padding 0.25s ease;
+}
+.footer-inner {
+  animation: footerSlideIn 0.2s ease;
+}
+@keyframes footerSlideIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

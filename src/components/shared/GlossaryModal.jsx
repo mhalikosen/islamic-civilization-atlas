@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import T from '../../data/i18n';
 import glossary from '../../data/glossary';
 
 /* ═══ Turkish Character Normalization for Search ═══ */
@@ -20,6 +21,7 @@ export default function GlossaryModal({ lang }) {
   const [expanded, setExpanded] = useState(null);
   const inputRef = useRef(null);
   const panelRef = useRef(null);
+  const t = T[lang];
 
   /* Focus search on open */
   useEffect(() => {
@@ -55,23 +57,23 @@ export default function GlossaryModal({ lang }) {
   return (
     <>
       <button className="glossary-btn" onClick={() => setOpen(true)}
-        aria-label={lang === 'tr' ? 'Sözlük' : 'Glossary'} title={lang === 'tr' ? 'Sözlük' : 'Glossary'}>
+        aria-label={t.glossary.btn} title={t.glossary.btn}>
         📖
       </button>
 
       {open && (
         <div className="glossary-overlay" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
           <div className="glossary-panel" ref={panelRef} role="dialog" aria-modal="true"
-            aria-label={lang === 'tr' ? 'İslam Tarihi Sözlüğü' : 'Islamic History Glossary'}>
+            aria-label={t.glossary.title}>
             {/* Header */}
             <div className="glossary-header">
               <div className="glossary-title-row">
                 <span className="glossary-icon">📖</span>
                 <h2 className="glossary-title">
-                  {lang === 'tr' ? 'İslam Tarihi Sözlüğü' : 'Islamic History Glossary'}
+                  {t.glossary.title}
                 </h2>
               </div>
-              <button className="glossary-close" onClick={() => setOpen(false)} aria-label={lang === 'tr' ? 'Kapat' : 'Close'}>✕</button>
+              <button className="glossary-close" onClick={() => setOpen(false)} aria-label={t.about.close}>✕</button>
             </div>
 
             {/* Search */}
@@ -81,26 +83,26 @@ export default function GlossaryModal({ lang }) {
                 ref={inputRef}
                 type="text"
                 className="glossary-search"
-                placeholder={lang === 'tr' ? 'Terim ara… (ör: halife, vakıf, medrese)' : 'Search terms… (e.g. caliph, waqf, madrasa)'}
+                placeholder={t.glossary.placeholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                aria-label={lang === 'tr' ? 'Sözlükte ara' : 'Search glossary'}
+                aria-label={t.glossary.searchLabel}
               />
               {query && (
-                <button className="glossary-clear" onClick={() => setQuery('')} aria-label={lang === 'tr' ? 'Temizle' : 'Clear'}>✕</button>
+                <button className="glossary-clear" onClick={() => setQuery('')} aria-label={t.search.clear}>✕</button>
               )}
             </div>
 
             {/* Count */}
             <div className="glossary-count">
-              {filtered.length} / {glossary.length} {lang === 'tr' ? 'terim' : 'terms'}
+              {filtered.length} / {glossary.length} {t.glossary.terms}
             </div>
 
             {/* List */}
             <div className="glossary-list">
               {filtered.length === 0 ? (
                 <div className="glossary-empty">
-                  {lang === 'tr' ? 'Sonuç bulunamadı.' : 'No results found.'}
+                  {t.glossary.noResults}
                 </div>
               ) : (
                 filtered.map(g => (

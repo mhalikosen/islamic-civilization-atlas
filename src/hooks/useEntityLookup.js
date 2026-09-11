@@ -1,16 +1,18 @@
 import { useMemo } from 'react';
 import DB from '../data/db.json';
 
-/** Utility: get localized name */
-export const n = (o, lang) => lang === 'tr' ? o.tr : o.en;
+/** Utility: get localized name — supports TR/EN/AR with fallback */
+export const n = (o, lang) => {
+  if (!o) return '';
+  return o[lang] || o.en || o.tr || '';
+};
 
-/** Localized field helper: picks _tr or _en suffix, with fallback */
+/** Localized field helper: picks _tr/_en/_ar suffix, with fallback chain */
 export const lf = (obj, field, lang) => {
-  const primary = lang === 'tr' ? obj[`${field}_tr`] : obj[`${field}_en`];
+  if (!obj) return '';
+  const primary = obj[`${field}_${lang}`];
   if (primary) return primary;
-  // Fallback to other language
-  const fallback = lang === 'tr' ? obj[`${field}_en`] : obj[`${field}_tr`];
-  return fallback || '';
+  return obj[`${field}_en`] || obj[`${field}_tr`] || '';
 };
 
 /**
@@ -24,6 +26,9 @@ export function useNameMap(lang) {
     DB.events.forEach(e => { m[`event:${e.id}`] = n(e, lang); });
     DB.scholars.forEach(s => { m[`scholar:${s.id}`] = n(s, lang); });
     DB.monuments.forEach(mon => { m[`monument:${mon.id}`] = n(mon, lang); });
+    DB.routes?.forEach(r => { m[`trade_route:${r.id}`] = n(r, lang); });
+    DB.diplomacy?.forEach(d => { m[`diplomacy:${d.id}`] = n(d, lang); });
+    DB.cities?.forEach(c => { m[`city:${c.id}`] = n(c, lang); });
     return m;
   }, [lang]);
 }

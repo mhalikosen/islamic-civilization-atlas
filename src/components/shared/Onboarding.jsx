@@ -1,26 +1,21 @@
 import { useState, useCallback } from 'react';
+import T from '../../data/i18n';
 
-const STEPS = [
-  { icon: '🗺', title_tr: 'Harita', title_en: 'Map',
-    text_tr: 'Tarihî olayları, savaşları ve anıtları haritada keşfedin.',
-    text_en: 'Discover historical events, battles, and monuments on the map.' },
-  { icon: '📊', title_tr: 'Zaman Çizelgesi', title_en: 'Timeline',
-    text_tr: '290 âlimin hayat çizgilerini inceleyin.',
-    text_en: 'Explore the life spans of 290 scholars.' },
-  { icon: '🔗', title_tr: 'Âlim Ağı', title_en: 'Scholar Network',
-    text_tr: 'Hoca-öğrenci ilişkilerini keşfedin.',
-    text_en: 'Discover teacher-student relationships.' },
-  { icon: '⚔', title_tr: 'Savaşlar', title_en: 'Battles',
-    text_tr: '65 savaşın detaylarını ve taktik analizlerini okuyun.',
-    text_en: 'Read detailed analyses of 65 battles.' },
-  { icon: '🎓', title_tr: 'Quiz', title_en: 'Quiz',
-    text_tr: 'Bilginizi test edin ve rozet kazanın.',
-    text_en: 'Test your knowledge and earn badges.' },
-];
+function getSteps(t) {
+  return [
+    { icon: '🗺', title: t.tabs.map.replace(/🗺\s?/, ''), text: t.onb.mapDesc },
+    { icon: '📊', title: t.tabs.timeline.replace(/📅\s?/, ''), text: t.onb.timelineDesc },
+    { icon: '🔗', title: t.onb.scholarNet, text: t.onb.scholarDesc },
+    { icon: '⚔', title: t.layers.battles, text: t.onb.battleDesc },
+    { icon: '🎓', title: 'Quiz', text: t.onb.quizDesc },
+  ];
+}
 
 export default function Onboarding({ lang, onDone }) {
   const [step, setStep] = useState(0);
   const [dontShow, setDontShow] = useState(false);
+  const t = T[lang];
+  const STEPS = getSteps(t);
 
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
@@ -44,32 +39,30 @@ export default function Onboarding({ lang, onDone }) {
 
         <div className="onboarding-icon">{current.icon}</div>
         <h2 className="onboarding-title">
-          {lang === 'tr' ? current.title_tr : current.title_en}
+          {current.title}
         </h2>
         <p className="onboarding-text">
-          {lang === 'tr' ? current.text_tr : current.text_en}
+          {current.text}
         </p>
 
         <div className="onboarding-nav">
           {step > 0 && (
             <button className="onboarding-btn secondary" onClick={handlePrev}>
-              ← {lang === 'tr' ? 'Geri' : 'Back'}
+              {t.onb.back}
             </button>
           )}
           <button className="onboarding-btn primary" onClick={handleNext}>
-            {isLast
-              ? (lang === 'tr' ? 'Başla!' : 'Start!')
-              : (lang === 'tr' ? 'İleri →' : 'Next →')}
+            {isLast ? t.onb.start : t.onb.next}
           </button>
         </div>
 
         <div className="onboarding-footer">
           <label className="onboarding-checkbox-label">
             <input type="checkbox" checked={dontShow} onChange={e => setDontShow(e.target.checked)} />
-            <span>{lang === 'tr' ? 'Tekrar gösterme' : "Don't show again"}</span>
+            <span>{t.onb.dismiss}</span>
           </label>
           <button className="onboarding-skip" onClick={handleSkip}>
-            {lang === 'tr' ? 'Atla' : 'Skip'}
+            {t.onb.skip}
           </button>
         </div>
       </div>
