@@ -63,7 +63,7 @@ export default function AdminHeader({ onBack, onNavigate }) {
         setModalCommit(commit);
       });
       if (result.ok) {
-        toast?.addToast(`${result.files.length} dosya GitHub'a kaydedildi. Vercel ~30 sn içinde deploy edecek.`, 'success', 8000);
+        toast?.addToast(`${result.files.length} dosya GitHub'a kaydedildi. GitHub Pages birkaç dakika içinde yayına alacak.`, 'success', 8000);
       } else {
         const errCount = result.files.filter(f => f.status === 'error').length;
         toast?.addToast(`${errCount} dosyada hata oluştu. Detaylar için pencereye bakın.`, 'error', 8000);

@@ -51,7 +51,7 @@ export default function GitHubSaveModal({ files, commitMessage, onClose }) {
           <div className="admin-save-footer">
             {allDone && !hasError && (
               <p className="admin-save-deploy-note">
-                Vercel ~30 saniye içinde deploy edecek.
+                GitHub Pages birkaç dakika içinde yayına alacak.
               </p>
             )}
             <button className="admin-btn admin-btn-primary" onClick={onClose}>

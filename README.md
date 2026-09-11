@@ -51,7 +51,7 @@ TDV İslam Ansiklopedisi'nin 8.528 âlim biyografisinin tam entegrasyonu:
 - TDV İslam Ansiklopedisi (DİA) — 8.528 âlim biyografisi, 8.127 hoca-talebe ilişkisi, 44.611 eser
 
 ## Teknoloji
-React 18 · Vite · Leaflet · D3.js · Three.js · Vercel
+React 18 · Vite · Leaflet · D3.js · Three.js · GitHub Pages
 
 ## Kurulum
 ```bash
