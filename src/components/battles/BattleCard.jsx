@@ -41,16 +41,20 @@ export default function BattleCard({ battle, lang, t }) {
   const typeEn = battle.type_en || 'Land';
   const icon = TYPE_ICONS[typeEn] || '⚔';
   const ot = getOutcomeType(battle);
-  const sig = lang === 'tr' ? (t.imp?.[battle.sig] || battle.sig) : (battle.sig === 'Kritik' ? 'Critical' : battle.sig === 'Yüksek' ? 'High' : battle.sig || 'Normal');
-  const typeLabel = lang === 'tr' ? (battle.type_tr || typeEn) : typeEn;
-  const outLabel = lang === 'tr' ? (battle.out_tr || battle.out_en || '') : (battle.out_en || '');
+  const sig = t.imp?.[battle.sig] || battle.sig;
+  const typeLabel = battle[`type_${lang}`] || battle.type_en || battle.type_tr || typeEn;
+  const outLabel = battle[`out_${lang}`] || battle.out_en || battle.out_tr || '';
 
-  const tactic = lang === 'tr'
-    ? (battle.tactic_tr || battle.tactic_en || '')
-    : (battle.tactic_en || battle.tactic_tr || '');
+  const tactic = battle[`tactic_${lang}`] || battle.tactic_en || battle.tactic_tr || '';
 
   const impact = lf(battle, 'impact', lang);
   const narr = lf(battle, 'narr', lang);
+
+  const isCivil = (battle.type_en || '').includes('Civil');
+  const cmdM = lf(battle, 'cmd_m', lang);
+  const cmdO = lf(battle, 'cmd_o', lang);
+  const symM = isCivil ? '⚔' : '☪';
+  const symO = isCivil ? '⚔' : '✦';
 
   return (
     <div className="battle-card">
@@ -66,12 +70,12 @@ export default function BattleCard({ battle, lang, t }) {
       {/* Commanders */}
       <div className="bc-section-label">{ts.commanders || 'Commanders'}</div>
       <div className="bc-cmd-row">
-        <span className="bc-cmd-symbol">☪</span>
-        {lf(battle, 'cmd_m', lang)}
+        <span className="bc-cmd-symbol">{symM}</span>
+        {cmdM}
       </div>
       <div className="bc-cmd-row">
-        <span className="bc-cmd-symbol">✦</span>
-        {lf(battle, 'cmd_o', lang)}
+        <span className="bc-cmd-symbol">{symO}</span>
+        {cmdO}
       </div>
       <div className="bc-cmd-row" style={{ fontSize: 11, color: 'var(--cream2)' }}>
         vs {lf(battle, 'opp', lang)}
@@ -91,14 +95,14 @@ export default function BattleCard({ battle, lang, t }) {
       {/* Forces & Casualties */}
       {(lf(battle, 'forces_m', lang) || battle.forces_m) && (
         <>
-          <div className="bc-section-label">{lang === 'tr' ? 'Kuvvetler' : 'Forces'}</div>
+          <div className="bc-section-label">{{ tr: 'Kuvvetler', en: 'Forces', ar: '' }[lang]}</div>
           <div className="bc-forces-row">
-            <span className="bc-cmd-symbol">☪</span>
-            <span>{lf(battle, 'forces_m', lang) || battle.forces_m}</span>
+            <span className="bc-cmd-symbol">{symM}</span>
+            <span>{cmdM && <small style={{ color: 'var(--gold)', marginRight: 4 }}>{cmdM}:</small>}{lf(battle, 'forces_m', lang) || battle.forces_m}</span>
           </div>
           <div className="bc-forces-row">
-            <span className="bc-cmd-symbol">✦</span>
-            <span>{lf(battle, 'forces_o', lang) || battle.forces_o}</span>
+            <span className="bc-cmd-symbol">{symO}</span>
+            <span>{cmdO && <small style={{ color: 'var(--cream2)', marginRight: 4 }}>{cmdO}:</small>}{lf(battle, 'forces_o', lang) || battle.forces_o}</span>
           </div>
           {(lf(battle, 'casualties', lang) || battle.casualties) && (
             <div className="bc-casualties" style={{ fontSize: 11, marginTop: 4, color: '#f87171' }}>

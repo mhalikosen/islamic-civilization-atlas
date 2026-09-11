@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import DB from '../../data/db.json';
+import T from '../../data/i18n';
 import '../../styles/landing.css';
 
 /* ── CountUp with easeOutQuad ── */
@@ -39,6 +40,7 @@ function StatItem({ target, label, delay }) {
 
 export default function LandingPage({ lang, setLang, onEnter }) {
   const [exiting, setExiting] = useState(false);
+  const t = T[lang];
 
   const handleExplore = useCallback(() => {
     setExiting(true);
@@ -53,13 +55,14 @@ export default function LandingPage({ lang, setLang, onEnter }) {
   }, [setLang]);
 
   const stats = [
-    { key: 'dynasties', count: DB.dynasties?.length || 186, tr: 'Hanedan', en: 'Dynasties' },
-    { key: 'scholars', count: DB.scholars?.length || 313, tr: 'Âlim', en: 'Scholars' },
-    { key: 'battles', count: DB.battles?.length || 65, tr: 'Savaş', en: 'Battles' },
-    { key: 'rulers', count: DB.rulers?.length || 830, tr: 'Hükümdar', en: 'Rulers' },
-    { key: 'monuments', count: DB.monuments?.length || 60, tr: 'Eser', en: 'Monuments' },
-    { key: 'cities', count: DB.cities?.length || 82, tr: 'Şehir', en: 'Cities' },
-    { key: 'madrasas', count: DB.madrasas?.length || 35, tr: 'Medrese', en: 'Madrasas' },
+    { key: 'dynasties', count: DB.dynasties?.length || 186, label: t.landing.dynasties },
+    { key: 'scholars', count: DB.scholars?.length || 313, label: t.landing.scholars },
+    { key: 'battles', count: DB.battles?.length || 65, label: t.landing.battles },
+    { key: 'rulers', count: DB.rulers?.length || 830, label: t.landing.rulers },
+    { key: 'monuments', count: DB.monuments?.length || 60, label: t.landing.monuments },
+    { key: 'cities', count: DB.cities?.length || 82, label: t.landing.cities },
+    { key: 'madrasas', count: DB.madrasas?.length || 35, label: t.landing.madrasas },
+    { key: 'alam', count: 13940, label: t.landing.alamBio },
   ];
 
   return (
@@ -72,21 +75,21 @@ export default function LandingPage({ lang, setLang, onEnter }) {
 
       {/* Language toggle */}
       <button className="landing-lang" onClick={toggleLang} aria-label="Toggle language">
-        {lang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR'}
+        {t.landing.langToggle}
       </button>
 
       {/* Hero */}
       <div className="landing-hero">
         <div className="landing-logo">☪</div>
         <h1 className="landing-title">
-          {lang === 'tr' ? 'Müslüman Hanedanlar Atlası' : 'Islamic Dynasties Atlas'}
+          {t.title}
         </h1>
         <p className="landing-subtitle">
-          {lang === 'tr' ? '632–1924 · Bosworth Veri Tabanı' : '632–1924 · Bosworth Database'}
+          {t.landing.subtitle}
         </p>
         <button className="landing-explore" onClick={handleExplore}>
           <span className="landing-explore-icon">🗺</span>
-          {lang === 'tr' ? 'Keşfet' : 'Explore'}
+          {t.landing.explore}
         </button>
       </div>
 
@@ -96,7 +99,7 @@ export default function LandingPage({ lang, setLang, onEnter }) {
           <StatItem
             key={s.key}
             target={s.count}
-            label={lang === 'tr' ? s.tr : s.en}
+            label={s.label}
             delay={1200 + i * 200}
           />
         ))}

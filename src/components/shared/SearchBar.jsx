@@ -1,8 +1,11 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import DB from '../../data/db.json';
+import useAsyncData from '../../hooks/useAsyncData.jsx';
+import T from '../../data/i18n';
 import { n } from '../../hooks/useEntityLookup';
+import { f } from '../../data/i18n-utils';
 
-/* ═══ Turkish-tolerant normalization ═══ */
+/* ═══ Turkish + Arabic tolerant normalization ═══ */
 const normalize = (s) =>
   s.toLowerCase()
     .replace(/ı/g, 'i')
@@ -13,10 +16,23 @@ const normalize = (s) =>
     .replace(/ç/g, 'c')
     .replace(/â/g, 'a')
     .replace(/î/g, 'i')
-    .replace(/û/g, 'u');
+    .replace(/û/g, 'u')
+    .replace(/[āáà]/g, 'a')
+    .replace(/[ūú]/g, 'u')
+    .replace(/[īíì]/g, 'i')
+    .replace(/[ḥḫ]/g, 'h')
+    .replace(/ṣ/g, 's')
+    .replace(/ṭ/g, 't')
+    .replace(/ḍ/g, 'd')
+    .replace(/ẓ/g, 'z')
+    .replace(/ʿ|ʾ|'/g, '')
+    .replace(/[\u0610-\u065f\u0670]/g, '')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/أ|إ|آ/g, 'ا');
 
 /* ═══ Build search index with multi-field support ═══ */
-function buildSearchIndex() {
+function buildSearchIndex(alamData) {
   const idx = [];
 
   DB.dynasties.forEach(d => {
@@ -145,6 +161,26 @@ function buildSearchIndex() {
     }
   });
 
+  // el-A'lâm biographies (only geocoded for map, all for search)
+  (alamData || []).forEach(b => {
+    const searchTr = normalize(b.ht || '');
+    const searchEn = normalize(b.he || '');
+    const searchAr = normalize(b.h || '');
+    const extra = normalize([b.pt || '', b.pe || '', b.dt || '', b.de || ''].join(' '));
+    idx.push({
+      type: 'alam', icon: '📖',
+      obj: { id: b.id },
+      lat: b.lat || 30, lon: b.lon || 45,
+      zoom: b.lat ? 7 : 4,
+      name_tr: b.ht || b.h, name_en: b.he || b.h,
+      search_tr: searchTr + ' ' + searchAr,
+      search_en: searchEn + ' ' + searchAr,
+      search_extra: extra,
+      ctx_yr: b.md ? `(ö. ${b.md})` : b.mb ? `(d. ${b.mb})` : '',
+      ctx_detail: [b.pt || '', b.mz || ''].filter(Boolean).join(' · '),
+    });
+  });
+
   return idx;
 }
 
@@ -162,21 +198,32 @@ function fuzzyMatch(haystack, needle) {
   return { match: true, score: gaps + 10 };
 }
 
-/* ═══ Type labels ═══ */
-const TYPE_LABEL = {
-  tr: { dynasty: 'Hanedan', battle: 'Savaş', event: 'Olay', scholar: 'Âlim', monument: 'Eser', city: 'Şehir', ruler: 'Hükümdar', madrasa: 'Medrese' },
-  en: { dynasty: 'Dynasty', battle: 'Battle', event: 'Event', scholar: 'Scholar', monument: 'Monument', city: 'City', ruler: 'Ruler', madrasa: 'Madrasa' }
-};
+/* ═══ Type labels — derived from t inside component ═══ */
+function getTypeLabels(t) {
+  return {
+    dynasty: t.m.dynasty, battle: t.m.battle, event: t.m.event,
+    scholar: t.m.scholar, monument: t.m.monument, city: t.m.city,
+    ruler: t.m.ruler, madrasa: t.layers.madrasas, alam: t.alam.title,
+  };
+}
 
 const CATEGORIES = [
-  { key: 'dynasty',  icon: '🏛', label_tr: 'Hanedan',  label_en: 'Dynasty' },
-  { key: 'battle',   icon: '⚔', label_tr: 'Savaş',    label_en: 'Battle' },
-  { key: 'scholar',  icon: '📚', label_tr: 'Âlim',     label_en: 'Scholar' },
-  { key: 'monument', icon: '🕌', label_tr: 'Anıt',     label_en: 'Monument' },
-  { key: 'city',     icon: '🏙', label_tr: 'Şehir',    label_en: 'City' },
-  { key: 'event',    icon: '📜', label_tr: 'Olay',     label_en: 'Event' },
-  { key: 'ruler',    icon: '👑', label_tr: 'Hükümdar', label_en: 'Ruler' },
+  { key: 'dynasty',  icon: '🏛', labelKey: 'dynasty' },
+  { key: 'battle',   icon: '⚔', labelKey: 'battle' },
+  { key: 'scholar',  icon: '📚', labelKey: 'scholar' },
+  { key: 'monument', icon: '🕌', labelKey: 'monument' },
+  { key: 'city',     icon: '🏙', labelKey: 'city' },
+  { key: 'event',    icon: '📜', labelKey: 'event' },
+  { key: 'ruler',    icon: '👑', labelKey: 'ruler' },
+  { key: 'alam',     icon: '📖', labelKey: 'alam' },
 ];
+
+/* Map from search category key → map layer key */
+const CAT_TO_LAYER = {
+  dynasty: 'dynasties', battle: 'battles', scholar: 'scholars',
+  monument: 'monuments', city: 'cities', event: 'events',
+  ruler: 'rulers', madrasa: 'madrasas', alam: null,
+};
 
 const RECENT_KEY = 'atlas-recent-searches';
 function loadRecent() { try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch { return []; } }
@@ -194,7 +241,10 @@ export default function SearchBar({ lang, onFlyTo, onSelectEntity }) {
   const wrapRef = useRef(null);
   const inputRef = useRef(null);
 
-  const searchIndex = useMemo(() => buildSearchIndex(), []);
+  // Lazy-load alam data — search works immediately with DB data, alam entries arrive later
+  const { data: alamData } = useAsyncData('/data/alam_lite.json');
+
+  const searchIndex = useMemo(() => buildSearchIndex(alamData), [alamData]);
   const totalCount = searchIndex.length;
 
   useEffect(() => {
@@ -213,6 +263,17 @@ export default function SearchBar({ lang, onFlyTo, onSelectEntity }) {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key); else next.add(key);
       if (next.size === 0) CATEGORIES.forEach(c => next.add(c.key));
+
+      // When exactly one category is active, solo the corresponding map layer
+      if (next.size === 1) {
+        const soloKey = [...next][0];
+        const layerKey = CAT_TO_LAYER[soloKey];
+        if (layerKey) window.dispatchEvent(new CustomEvent('atlas:layersolo', { detail: { layer: layerKey } }));
+      } else if (next.size === CATEGORIES.length) {
+        // All selected → reset layers
+        window.dispatchEvent(new CustomEvent('atlas:layersolo', { detail: { layer: null } }));
+      }
+
       return next;
     });
   }, []);
@@ -261,7 +322,7 @@ export default function SearchBar({ lang, onFlyTo, onSelectEntity }) {
 
   const handleSelect = useCallback((item) => {
     setShowDropdown(false); setShowRecent(false);
-    addToRecent(query.trim() || (lang === 'tr' ? item.name_tr : item.name_en));
+    addToRecent(query.trim() || (f(item, 'name', lang)));
     setQuery('');
     if (onFlyTo) onFlyTo({ lat: item.lat, lon: item.lon, zoom: item.zoom });
     if (onSelectEntity) onSelectEntity(item);
@@ -293,20 +354,25 @@ export default function SearchBar({ lang, onFlyTo, onSelectEntity }) {
     else if (e.key === 'Escape') setShowDropdown(false);
   }, [showDropdown, showRecent, results, selectedIdx, handleSelect, handleRandom]);
 
-  const labels = TYPE_LABEL[lang] || TYPE_LABEL.en;
+  const t = T[lang] || T.tr;
+  if (!t || !t.search) {
+    console.error('[SearchBar] T[lang] is broken. lang=', lang, 'T keys=', Object.keys(T));
+    return <div style={{color:'red'}}>SearchBar: i18n error (lang={String(lang)})</div>;
+  }
+  const labels = getTypeLabels(t);
 
   return (
     <div className="search-wrap" ref={wrapRef}>
       <div className="search-input-row">
         <span className="search-icon">🔍</span>
         <input ref={inputRef} type="text" className="search-input"
-          placeholder={lang === 'tr' ? 'Hanedan, savaş, âlim, şehir ara…' : 'Search dynasties, battles, scholars, cities…'}
+          placeholder={t.search.placeholder}
           value={query} onChange={handleChange} onKeyDown={handleKeyDown} onFocus={handleFocus}
-          aria-label={lang === 'tr' ? 'Haritada ara' : 'Search map'}
+          aria-label={t.search.ariaSearch}
           aria-expanded={showDropdown || showRecent} aria-autocomplete="list" role="combobox" />
         <button className="search-random-btn" onClick={handleRandom}
-          title={lang === 'tr' ? 'Rastgele keşfet' : 'Random discovery'}
-          aria-label={lang === 'tr' ? 'Rastgele keşfet' : 'Random discovery'}>🎲</button>
+          title={t.search.random}
+          aria-label={t.search.random}>🎲</button>
       </div>
 
       {/* Category filter chips */}
@@ -315,9 +381,9 @@ export default function SearchBar({ lang, onFlyTo, onSelectEntity }) {
           <button key={cat.key}
             className={`search-chip${activeCategories.has(cat.key) ? ' active' : ''}`}
             onClick={() => toggleCategory(cat.key)}
-            title={lang === 'tr' ? cat.label_tr : cat.label_en}>
+            title={labels[cat.labelKey]}>
             <span className="search-chip-icon">{cat.icon}</span>
-            <span className="search-chip-label">{lang === 'tr' ? cat.label_tr : cat.label_en}</span>
+            <span className="search-chip-label">{labels[cat.labelKey]}</span>
           </button>
         ))}
       </div>
@@ -326,9 +392,9 @@ export default function SearchBar({ lang, onFlyTo, onSelectEntity }) {
       {showRecent && recentSearches.length > 0 && (
         <ul className="search-dropdown" role="listbox">
           <li className="search-recent-header">
-            <span>{lang === 'tr' ? '🕐 Son Aramalar' : '🕐 Recent Searches'}</span>
+            <span>{t.search.recentTitle}</span>
             <button className="search-recent-clear" onClick={clearRecent}>
-              {lang === 'tr' ? 'Temizle' : 'Clear'}
+              {t.search.clear}
             </button>
           </li>
           {recentSearches.map((term, i) => (
@@ -353,7 +419,7 @@ export default function SearchBar({ lang, onFlyTo, onSelectEntity }) {
               role="option" aria-selected={i === selectedIdx}>
               <span className="search-result-icon">{r.icon}</span>
               <div className="search-result-info">
-                <span className="search-result-name">{lang === 'tr' ? r.name_tr : r.name_en}</span>
+                <span className="search-result-name">{f(r, 'name', lang)}</span>
                 {(r.ctx_yr || r.ctx_detail) && (
                   <span className="search-result-meta">
                     {r.ctx_yr}{r.ctx_yr && r.ctx_detail ? ' · ' : ''}{r.ctx_detail}
@@ -364,7 +430,7 @@ export default function SearchBar({ lang, onFlyTo, onSelectEntity }) {
             </li>
           ))}
           <li className="search-stats">
-            {results.length} {lang === 'tr' ? 'sonuç' : 'results'} / {totalCount.toLocaleString()} {lang === 'tr' ? 'kayıt arasında' : 'records'}
+            {results.length} {t.search.results} / {totalCount.toLocaleString()} {t.search.among}
           </li>
         </ul>
       )}

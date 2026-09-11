@@ -8,7 +8,30 @@ const row = (label, val) => val ? `<div><b>${label}:</b> ${val}</div>` : '';
 /** Narrative block */
 const narrBlock = (obj, lang) => {
   const txt = lf(obj, 'narr', lang);
-  return txt ? `<div class="p-narr">${txt}</div>` : '';
+  if (!txt) return '';
+  const tl = { tr: 'tr-TR', en: 'en-US', ar: 'ar-SA' }[lang] || 'tr-TR';
+  const title = { tr: 'Dinle / Durdur', en: 'Listen / Stop', ar: 'استمع / توقف' }[lang] || 'Dinle / Durdur';
+  const ttsBtn = `<button class="p-tts" onclick="(() => {
+    if(window.speechSynthesis.speaking){
+      window.speechSynthesis.cancel();
+      this.textContent='🔊';
+      this.title='${title}';
+      return;
+    }
+    const t=this.parentElement.textContent.replace(/[🔊⏹]/g,'').trim();
+    const u=new SpeechSynthesisUtterance(t);
+    u.lang='${tl}'; u.rate=0.88; u.pitch=1.05;
+    const vv=speechSynthesis.getVoices();
+    const best=vv.find(v=>v.lang==='${tl}'&&v.name.match(/Samantha|Karen|Daniel|Google|Natural|Yelda|Majed/))||vv.find(v=>v.lang==='${tl}'&&!v.localService)||vv.find(v=>v.lang.startsWith('${tl}'.slice(0,2)));
+    if(best)u.voice=best;
+    const btn=this;
+    btn.textContent='⏹';
+    u.onend=()=>{btn.textContent='🔊';};
+    u.onerror=()=>{btn.textContent='🔊';};
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  })()" title="${title}">🔊</button>`;
+  return `<div class="p-narr">${txt}${ttsBtn}</div>`;
 };
 
 /** Causal links section in popup */
@@ -17,10 +40,10 @@ export const causalBlock = (type, id, lang, idx) => {
   if (!links || !links.length) return '';
   const rows = links.slice(0, 5).map(l => {
     const arrow = l.dir === 'out' ? '→' : '←';
-    const desc = lang === 'tr' ? l.dtr : l.den;
+    const desc = (l[`d${lang}`] || l.den || l.dtr);
     return `<div class="p-lnk"><span class="p-lnk-a">${arrow}</span><span class="p-lnk-t">${l.lt}</span>${desc}</div>`;
   }).join('');
-  return `<div class="p-lnks"><div class="p-lnks-h">🔗 ${lang === 'tr' ? 'Bağlantılar' : 'Connections'}</div>${rows}</div>`;
+  return `<div class="p-lnks"><div class="p-lnks-h">🔗 ${{ tr: 'Bağlantılar', en: 'Connections', ar: '' }[lang]}</div>${rows}</div>`;
 };
 
 /** Religion badge */
@@ -33,8 +56,8 @@ const relBadge = (rel, t) => {
 /** Context row helper */
 const ctxRow = (icon, label, val) => val ? `<div class="p-ctx"><span class="p-ctx-i">${icon}</span><b>${label}:</b> ${val}</div>` : '';
 
-/** Popup options */
-export const popOpt = (mw = 380) => ({ maxWidth: mw, maxHeight: 460, className: 'p-rich' });
+/** Popup options — wider for better readability */
+export const popOpt = (mw = 420) => ({ maxWidth: mw, maxHeight: 480, className: 'p-rich' });
 
 /* ── Dynasty Popup ── */
 export function buildDynastyPopup(d, lang, t, analyticsMap, causalIdx) {
@@ -126,7 +149,7 @@ export function buildCityPopup(c, lang, t) {
     `<div class="p-row"><span class="p-k">${mk.pop}</span><span class="p-v">${c.pop ? c.pop.toLocaleString() : '—'}${c.yr ? ' (' + c.yr + ')' : ''}</span></div>` +
     `<div class="p-row"><span class="p-k">${mk.role}</span><span class="p-v">${lf(c, 'role', lang)}</span></div>` +
     narrBlock(c, lang) +
-    ctxRow('🏗', lang === 'tr' ? 'Katmanlar' : 'Layers', lf(c, 'layers', lang)) +
+    ctxRow('🏗', { tr: 'Katmanlar', en: 'Layers', ar: '' }[lang], lf(c, 'layers', lang)) +
     (fun ? `<div class="p-vis"><span class="p-vis-i">🎲</span>${fun}</div>` : '');
 }
 
@@ -140,7 +163,7 @@ export function buildRoutePopup(r, lang, t) {
     `<div class="p-row"><span class="p-k">${mk.period}</span><span class="p-v">${r.ps || '?'} – ${r.pe || '?'}</span></div>` +
     `<div class="p-row"><span class="p-k">${mk.goods}</span><span class="p-v">${(lf(r, 'goods', lang) || '').replace(/;/g, ', ')}</span></div>` +
     narrBlock(r, lang) +
-    ctxRow('💰', lang === 'tr' ? 'Ekonomik Etki' : 'Economic Impact', lf(r, 'econ', lang)) +
+    ctxRow('💰', { tr: 'Ekonomik Etki', en: 'Economic Impact', ar: '' }[lang], lf(r, 'econ', lang)) +
     (anec ? `<div class="p-vis"><span class="p-vis-i">📖</span>${anec}</div>` : '');
 }
 
@@ -153,16 +176,16 @@ export function buildRulerPopup(r, lang, t, dynastyName) {
   if (r.lst) badges.push(`<span class="p-badge p-last-ruler">◆ ${mk.lastRuler}</span>`);
 
   return `<div class="p-title">👑 ${r.n}</div>` +
-    (r.fn !== r.n ? `<div class="p-row"><span class="p-k">${lang === 'tr' ? 'Tam Ad' : 'Full Name'}</span><span class="p-v p-fn">${r.fn}</span></div>` : '') +
+    (r.fn !== r.n ? `<div class="p-row"><span class="p-k">${{ tr: 'Tam Ad', en: 'Full Name', ar: '' }[lang]}</span><span class="p-v p-fn">${r.fn}</span></div>` : '') +
     `<div class="p-row"><span class="p-k">${mk.dynasty}</span><span class="p-v">${dynastyName || ''}</span></div>` +
-    `<div class="p-row"><span class="p-k">${mk.reign}</span><span class="p-v">${r.rs || '?'} – ${r.re || '?'}${r.dur ? ` (${r.dur} ${lang === 'tr' ? 'yıl' : 'yr'})` : ''}</span></div>` +
+    `<div class="p-row"><span class="p-k">${mk.reign}</span><span class="p-v">${r.rs || '?'} – ${r.re || '?'}${r.dur ? ` (${r.dur} ${{ tr: 'yıl', en: 'yr', ar: '' }[lang]})` : ''}</span></div>` +
     (r.role ? `<div class="p-row"><span class="p-k">${mk.role}</span><span class="p-v">${r.role}</span></div>` : '') +
-    (r.title ? `<div class="p-row"><span class="p-k">${lang === 'tr' ? 'Unvan' : 'Title'}</span><span class="p-v p-fn">${r.title}</span></div>` : '') +
+    (r.title ? `<div class="p-row"><span class="p-k">${{ tr: 'Unvan', en: 'Title', ar: '' }[lang]}</span><span class="p-v p-fn">${r.title}</span></div>` : '') +
     (badges.length ? `<div class="p-badges">${badges.join(' ')}</div>` : '') +
     (r.pred ? `<div class="p-row"><span class="p-k">${mk.predecessor}</span><span class="p-v">${r.pred}</span></div>` : '') +
     (r.succ ? `<div class="p-row"><span class="p-k">${mk.successor}</span><span class="p-v">${r.succ}</span></div>` : '') +
     (r.suc_t ? `<div class="p-row"><span class="p-k">${mk.successionType}</span><span class="p-v">${r.suc_t}</span></div>` : '') +
-    `<div class="p-row"><span class="p-k">${lang === 'tr' ? 'Ölüm' : 'Death'}</span><span class="p-v">${deathLabel}</span></div>`;
+    `<div class="p-row"><span class="p-k">${{ tr: 'Ölüm', en: 'Death', ar: '' }[lang]}</span><span class="p-v">${deathLabel}</span></div>`;
 }
 
 /* ── Ruler List for Dynasty Popup ── */
@@ -192,24 +215,24 @@ export function buildRulerListHtml(rulers, lang, t) {
 
 /* ═══ Madrasa Popup ═══ */
 export function buildMadrasaPopup(m, lang, t, scholarsById) {
-  const name = lang === 'tr' ? m.tr : m.en;
-  const city = lang === 'tr' ? m.city_tr : m.city_en;
-  const type = lang === 'tr' ? m.type_tr : m.type_en;
-  const founder = lang === 'tr' ? m.founder_tr : m.founder_en;
-  const dynasty = lang === 'tr' ? m.dynasty_tr : m.dynasty_en;
-  const desc = lang === 'tr' ? m.desc_tr : m.desc_en;
-  const fields = lang === 'tr' ? m.fields_tr : m.fields_en;
-  const status = lang === 'tr' ? m.status_tr : m.status_en;
+  const name = n(m, lang);
+  const city = lf(m, 'city', lang);
+  const type = lf(m, 'type', lang);
+  const founder = lf(m, 'founder', lang);
+  const dynasty = lf(m, 'dynasty', lang);
+  const desc = lf(m, 'desc', lang);
+  const fields = lf(m, 'fields', lang);
+  const status = lf(m, 'status', lang);
   const closedStr = m.closed ? `${m.founded}–${m.closed}` : `${m.founded}–`;
 
   let scholarHtml = '';
   if (m.scholars && m.scholars.length && scholarsById) {
     const items = m.scholars.map(sid => {
       const s = scholarsById[sid];
-      return s ? `<span class="p-madrasa-scholar">• ${lang === 'tr' ? s.tr : s.en}</span>` : '';
+      return s ? `<span class="p-madrasa-scholar">• ${n(s, lang)}</span>` : '';
     }).filter(Boolean).join(' ');
     if (items) {
-      scholarHtml = `<div class="p-sect"><div class="p-sect-h">${lang === 'tr' ? 'İlişkili Âlimler' : 'Associated Scholars'}</div>${items}</div>`;
+      scholarHtml = `<div class="p-sect"><div class="p-sect-h">${{ tr: 'İlişkili Âlimler', en: 'Associated Scholars', ar: '' }[lang]}</div>${items}</div>`;
     }
   }
 
@@ -217,9 +240,9 @@ export function buildMadrasaPopup(m, lang, t, scholarsById) {
     <div class="p-head"><span class="p-icon">🎓</span><span class="p-name">${name}</span></div>
     <div class="p-meta">${city} · ${closedStr}</div>
     <div class="p-type-badge" style="color:#22d3ee">${type}</div>
-    ${row(lang === 'tr' ? 'Kurucu' : 'Founder', `${founder} (${dynasty})`)}
-    ${row(lang === 'tr' ? 'Alanlar' : 'Fields', fields)}
-    ${row(lang === 'tr' ? 'Durum' : 'Status', status)}
+    ${row({ tr: 'Kurucu', en: 'Founder', ar: '' }[lang], `${founder} (${dynasty})`)}
+    ${row({ tr: 'Alanlar', en: 'Fields', ar: '' }[lang], fields)}
+    ${row({ tr: 'Durum', en: 'Status', ar: '' }[lang], status)}
     ${scholarHtml}
     ${desc ? `<div class="p-narr">${desc}</div>` : ''}
   </div>`;

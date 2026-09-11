@@ -2,6 +2,8 @@ import { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import SCHOLAR_LINKS from '../../data/scholar_links';
 import ISNAD_CHAINS from '../../data/isnad_chains';
+import { n } from '../../data/i18n-utils';
+import T from '../../data/i18n';
 
 const DISC_COLORS = {
   'Fıkıh':                   '#16a34a',
@@ -88,7 +90,8 @@ ISNAD_CHAINS.forEach(ch => {
 
 export { DISC_COLORS };
 
-export default function ScholarNetwork({ scholars, links, lang, selected, onSelect, searchId, t, isnadMode, activeChains }) {
+export default function ScholarNetwork({ scholars, links, lang, selected, onSelect, searchId, t: tProp, isnadMode, activeChains }) {
+  const t = tProp || T[lang];
   const svgRef = useRef(null);
   const wrapRef = useRef(null);
   const simRef = useRef(null);
@@ -166,7 +169,7 @@ export default function ScholarNetwork({ scholars, links, lang, selected, onSele
       svg.append('text').attr('x', W/2).attr('y', H/2)
         .attr('text-anchor','middle').attr('fill','#6b6b7b')
         .attr('font-size','14px').attr('font-family','Outfit')
-        .text((t?.scholars?.noResults) || (lang === 'tr' ? 'Sonuç bulunamadı' : 'No results found'));
+        .text((t?.scholars?.noResults) || t.scholars.advNoResults);
       return;
     }
 
@@ -232,7 +235,7 @@ export default function ScholarNetwork({ scholars, links, lang, selected, onSele
           .attr('stroke', '#1f2937').attr('stroke-width', 1).attr('stroke-dasharray', '4,4');
         g.append('text').attr('x', 8).attr('y', ly - 6)
           .attr('fill', '#4b5563').attr('font-size', '10px').attr('font-family', 'Outfit')
-          .attr('font-weight', '600').text(lang === 'tr' ? tl.tr : tl.en);
+          .attr('font-weight', '600').text(n(tl, lang));
       });
 
       // School labels on top
@@ -246,7 +249,7 @@ export default function ScholarNetwork({ scholars, links, lang, selected, onSele
         g.append('text').attr('x', sc.x * W).attr('y', 20)
           .attr('text-anchor', 'middle').attr('fill', '#6b7280')
           .attr('font-size', '11px').attr('font-family', 'Outfit')
-          .attr('font-weight', '600').text(lang === 'tr' ? sc.tr : sc.en);
+          .attr('font-weight', '600').text(n(sc, lang));
       });
     } else {
       sim
@@ -357,7 +360,7 @@ export default function ScholarNetwork({ scholars, links, lang, selected, onSele
       .attr('pointer-events', 'none')
       .attr('opacity', d => isnadMode && !d.rawi_tag ? 0.05 : 1)
       .text(d => {
-        const name = lang === 'tr' ? d.tr : d.en;
+        const name = n(d, lang);
         const max = isnadMode ? 14 : 10;
         return name.length > max ? name.slice(0, max - 1) + '…' : name;
       });
@@ -388,7 +391,7 @@ export default function ScholarNetwork({ scholars, links, lang, selected, onSele
       const dates = d.b && d.d ? `${d.b} – ${d.d > 2024 ? '?' : d.d}` : '';
       const city = d.city_tr ? ` · ${d.city_tr}` : '';
       const lc = linkCount[d.id] || 0;
-      const lcLabel = lang === 'tr' ? 'bağlantı' : 'connections';
+      const lcLabel = t.scholars.advConnections;
 
       let html =
         `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">` +
@@ -401,20 +404,20 @@ export default function ScholarNetwork({ scholars, links, lang, selected, onSele
 
       // İsnâd-specific tooltip info
       if (d.rawi_tag) {
-        const tabLabel = lang === 'tr' ? (d.tabaqa_tr || '') : (d.tabaqa_en || '');
-        const rankLabel = lang === 'tr' ? (d.rawi_rank_tr || '') : (d.rawi_rank_en || '');
+        const tabLabel = (d[`tabaqa_${lang}`] || d.tabaqa_en || d.tabaqa_tr || '');
+        const rankLabel = (d[`rawi_rank_${lang}`] || d.rawi_rank_en || d.rawi_rank_tr || '');
         html += `<div style="border-top:1px solid #374151;padding-top:6px;margin-top:4px">`;
-        html += `<div style="font-size:10px;color:#9ca3af;margin-bottom:2px">📿 ${lang === 'tr' ? 'Tabaka' : 'Layer'}: <span style="color:${dColor};font-weight:600">${tabLabel}${d.tabaqa ? ' ('+d.tabaqa+')' : ''}</span></div>`;
-        html += `<div style="font-size:10px;color:#9ca3af;margin-bottom:2px">⚖ ${lang === 'tr' ? 'Derece' : 'Grade'}: <span style="color:#d1d5db">${rankLabel}</span></div>`;
+        html += `<div style="font-size:10px;color:#9ca3af;margin-bottom:2px">📿 ${t.scholars.advLayer}: <span style="color:${dColor};font-weight:600">${tabLabel}${d.tabaqa ? ' ('+d.tabaqa+')' : ''}</span></div>`;
+        html += `<div style="font-size:10px;color:#9ca3af;margin-bottom:2px">⚖ ${t.scholars.advGrade}: <span style="color:#d1d5db">${rankLabel}</span></div>`;
         if (d.hadith_count > 0) {
-          html += `<div style="font-size:10px;color:#9ca3af">📜 ~${d.hadith_count.toLocaleString()} ${lang === 'tr' ? 'rivâyet' : 'narrations'}</div>`;
+          html += `<div style="font-size:10px;color:#9ca3af">📜 ~${d.hadith_count.toLocaleString()} ${t.scholars.advNarrations}</div>`;
         }
         // Chains
         const myCh = chainMembershipMap[d.id];
         if (myCh && myCh.size > 0) {
-          html += `<div style="font-size:10px;color:#9ca3af;margin-top:4px">📿 ${lang === 'tr' ? 'Zincirler' : 'Chains'}: `;
+          html += `<div style="font-size:10px;color:#9ca3af;margin-top:4px">📿 ${t.scholars.advChains}: `;
           const names = [];
-          ISNAD_CHAINS.forEach(ch => { if (myCh.has(ch.id)) names.push(`<span style="color:${ch.color}">${lang === 'tr' ? ch.name_tr.split('(')[0].trim() : ch.name_en.split('(')[0].trim()}</span>`); });
+          ISNAD_CHAINS.forEach(ch => { if (myCh.has(ch.id)) names.push(`<span style="color:${ch.color}">${(ch[`name_${lang}`] || ch.name_en || ch.name_tr).split('(')[0].trim()}</span>`); });
           html += names.join(', ') + `</div>`;
         }
         html += `</div>`;

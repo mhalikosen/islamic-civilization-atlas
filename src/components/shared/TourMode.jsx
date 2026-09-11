@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import T from '../../data/i18n';
 import TOURS from '../../data/tours';
 
 export default function TourMode({ lang, onNavigate, onClose, onTourComplete }) {
@@ -37,29 +38,30 @@ export default function TourMode({ lang, onNavigate, onClose, onTourComplete }) 
     }
   }, [step, tourId, onNavigate]);
 
-  const lf = (obj, field) => lang === 'tr' ? obj[`${field}_tr`] : obj[`${field}_en`];
+  const lf = (obj, field) => obj[`${field}_${lang}`] || obj[`${field}_en`] || obj[`${field}_tr`] || '';
 
   // Tour selection screen
   if (!tourId) {
+    const t = T[lang];
     return (
       <div className="tour-overlay">
         <div className="tour-select">
           <div className="tour-select-header">
             <h2 className="tour-select-title">
-              {lang === 'tr' ? '🗺 Rehberli Turlar' : '🗺 Guided Tours'}
+              {t.tour.title}
             </h2>
             <p className="tour-select-sub">
-              {lang === 'tr' ? 'Bir tur seçerek İslam tarihini keşfedin' : 'Explore Islamic history by selecting a tour'}
+              {t.tour.subtitle}
             </p>
             <button className="tour-close-btn" onClick={onClose}>✕</button>
           </div>
           <div className="tour-grid">
-            {TOURS.map(t => (
-              <button key={t.id} className="tour-card" onClick={() => { setTourId(t.id); setStep(0); }}>
-                <span className="tour-card-icon">{t.icon}</span>
-                <span className="tour-card-title">{lf(t, 'title')}</span>
-                <span className="tour-card-desc">{lf(t, 'desc')}</span>
-                <span className="tour-card-stops">{t.stops.length} {lang === 'tr' ? 'durak' : 'stops'}</span>
+            {TOURS.map(t2 => (
+              <button key={t2.id} className="tour-card" onClick={() => { setTourId(t2.id); setStep(0); }}>
+                <span className="tour-card-icon">{t2.icon}</span>
+                <span className="tour-card-title">{lf(t2, 'title')}</span>
+                <span className="tour-card-desc">{lf(t2, 'desc')}</span>
+                <span className="tour-card-stops">{t2.stops.length} {t.tour.stops}</span>
               </button>
             ))}
           </div>
@@ -69,10 +71,11 @@ export default function TourMode({ lang, onNavigate, onClose, onTourComplete }) 
   }
 
   // Active tour
+  const t = T[lang];
   return (
     <div className="tour-panel">
       <div className="tour-panel-header">
-        <button className="tour-back" onClick={() => { setTourId(null); setPlaying(false); }}>← {lang === 'tr' ? 'Turlar' : 'Tours'}</button>
+        <button className="tour-back" onClick={() => { setTourId(null); setPlaying(false); }}>← {t.tour.back}</button>
         <span className="tour-panel-title">{tour.icon} {lf(tour, 'title')}</span>
         <button className="tour-close-btn-sm" onClick={onClose}>✕</button>
       </div>
@@ -93,20 +96,20 @@ export default function TourMode({ lang, onNavigate, onClose, onTourComplete }) 
 
       <div className="tour-nav">
         <button className="tour-nav-btn" disabled={step === 0} onClick={() => setStep(s => s - 1)}>
-          ← {lang === 'tr' ? 'Önceki' : 'Previous'}
+          ← {t.tour.previous}
         </button>
         <button className="tour-play-btn" onClick={() => setPlaying(p => !p)}>
           {playing ? '⏸' : '▶'}
         </button>
         <button className="tour-nav-btn" disabled={step === tour.stops.length - 1} onClick={() => setStep(s => s + 1)}>
-          {lang === 'tr' ? 'Sonraki' : 'Next'} →
+          {t.tour.next} →
         </button>
       </div>
 
       {/* Tour completion indicator */}
       {step === tour.stops.length - 1 && (
         <div className="tour-complete-msg">
-          🎉 {lang === 'tr' ? 'Tur tamamlandı!' : 'Tour completed!'}
+          🎉 {t.tour.complete}
         </div>
       )}
     </div>
